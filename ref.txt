@@ -1,0 +1,2 @@
+https://www.kaggle.com/infof422henni/ufo-air-quality
+http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html

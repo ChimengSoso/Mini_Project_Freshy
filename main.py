@@ -1,56 +1,134 @@
-import pandas as pd
 import numpy as np
-from sklearn import tree, preprocessing
-from multi_column_label_encoder import MultiColumnLabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn import neighbors
-from sklearn.metrics import confusion_matrix
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.svm import LinearSVC
+from imblearn.combine import SMOTEENN
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from multi_column_label_encoder import MultiColumnLabelEncoder
 
-dataset = pd.read_csv('data.csv')
+def ML(data_for_prediction = None, showPrediction = True, showHappen = True, showAccurate = True, showMatrixConfusion = True):
 
-dataset = dataset.drop(['data'], 1)
+    dataset = pd.read_csv('data.csv')
 
-for i in dataset:
-    if dataset[i].dtypes == float:
-        dataset[i] = dataset[i].fillna(0.0)
+    dataset = dataset.drop(['day','month', 'year'], 1)
 
-y = np.array(dataset['n_person'])
-dataset = dataset.drop(['n_person'], 1)
+    y = np.array(dataset['ET'])
+    dataset = dataset.drop(['ET'], 1)
+    sm = SMOTEENN()
+    for i in dataset:
+        if dataset[i].dtypes == float:
+            dataset[i] = dataset[i].fillna(0.0)
+        if dataset[i].dtypes == object:
+            dataset[i] = dataset[i].fillna('None')
 
-# min_max_scaler = preprocessing.MinMaxScaler()
-# dataset[[i for i in dataset if dataset[i].dtype == float]] = min_max_scaler.fit_transform(dataset[[i for i in dataset if dataset[i].dtypes == float]])
+    dataset = MultiColumnLabelEncoder().fit_transform(dataset)
 
-# x = np.array(dataset)
+    # Normalrize data
+    x = np.array(dataset)
 
-x = [np.array(dataset[i]) for i in dataset]
+    # Over Sampling data
+    x, y = sm.fit_sample(x, y)
 
-plt.plot(x[0], y, 'yo', x[1], y, 'ro', x[2], y, 'go', x[3], y, 'bo')
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2)
 
-# plt.axis([1, 40, 0, 2000])
-plt.xlabel('Tempereture')
-plt.ylabel('N person')
-plt.title('Rate of Number Population')
+    L_svc = LinearSVC()
+    L_svc.fit(x_train, y_train) # Train data
 
-plt.show()
+    prediction = L_svc.predict(x_test) # Prediction
 
-# print(x)
-# print(y)
+    if showPrediction:
+        print("\nPrediction : ")
+        print(prediction)
+        print('')
 
-# x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2)
+    if showHappen:
+        print("\nSould be happen:")
+        print(y_test)
+        print('')
 
-# lr = LinearRegression()
-# lr.fit(x_train, y_train)
+    acc = L_svc.score(x_test, y_test)
 
-# prediction = lr.predict(x_test)
+    if showAccurate:
+        print("\nAccurate:")
+        print(acc)
+        print('')
 
-# print("Prediction : ")
-# print(prediction)
+    if showMatrixConfusion:
+        print("\nConfusion Matrix")
+        print(confusion_matrix(prediction, y_test))
+        print('')
 
-# print("\nSould be happen:")
-# print(y_test)
+    if not isinstance(data_for_prediction, type(None)):
 
-# print("\nR2 score:")
-# print(r2_score(prediction, y_test))
+        data_for_prediction = data_for_prediction.drop(['day','month', 'year'], 1)
+
+        for i in data_for_prediction:
+            if data_for_prediction[i].dtypes == float:
+                data_for_prediction[i] = data_for_prediction[i].fillna(0.0)
+            if data_for_prediction[i].dtypes == object:
+                data_for_prediction[i] = data_for_prediction[i].fillna('None')
+
+        data_for_prediction = MultiColumnLabelEncoder().fit_transform(data_for_prediction)
+
+        data_for_prediction = np.array(data_for_prediction)
+        prediction = L_svc.predict(data_for_prediction)
+        
+        return prediction, acc
+
+    return None
+
+def app():
+    datainput = pd.read_csv('input.csv')
+    rlt = ML(datainput, 0, 0, 0, 0)
+
+    print("Processing...\n")
+    
+    n_predict = 10
+    avg_acc = 0.0
+    n_success = 0
+    for i in range(n_predict):
+        if rlt != None:
+            avg_acc += rlt[1]
+            n_success += 1.0
+            rlt = ML(datainput, 0, 0, 0, 0)
+        print("Processing %.2f%%..."%((i+1) * 100.0/ n_predict))
+
+    avg_acc /= n_success
+    
+    if rlt == None:
+        print('Can not tell anything')
+        return 'Can not tell anything'
+    else:
+        rlt_output = ""
+        len_rlt = len(rlt[0])
+        showMessage = "Consider %d place"
+        if len_rlt > 1:
+            showMessage += 's'
+        showMessage += '. Accurate Ans : %.2f%%\n'
+
+        accurateVal = avg_acc
+        
+        showMessage = showMessage%(len_rlt, accurateVal*100.0)
+        
+        print(showMessage)
+        rlt_output += showMessage + '\n'
+
+        idx = 1
+        for ans in rlt[0]:
+            if ans == 1:
+                partial_output = ""
+                partial_output += "  + Place %d: Have UFO!\n"%idx
+                print(partial_output)
+            else:
+                partial_output = ""
+                partial_output += "  + Place %d: Not anything~\n"%idx
+                print(partial_output)
+            idx += 1
+            rlt_output += partial_output + '\n'
+        return rlt_output
+
+if __name__ == '__main__':
+    ans = app()
+    print("Final Result :")
+    print(ans)

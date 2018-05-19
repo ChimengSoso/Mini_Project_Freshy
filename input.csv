@@ -1,0 +1,3 @@
+State.Code,city,state,day,month,year,hour,NO2.Mean,NO2.1st.Max.Value,NO2.1st.Max.Hour,NO2.AQI,O3.Mean,O3.1st.Max.Value,O3.1st.Max.Hour,O3.AQI,SO2.Mean,SO2.1st.Max.Value,SO2.1st.Max.Hour,SO2.AQI,CO.Mean,CO.1st.Max.Value,CO.1st.Max.Hour,CO.AQI
+4,benson,az,2,4,2005,20,13.333333,45,21,42,0.024875,0.04,9,34,0.375,2,14,3,0.283333,0.5,22,6
+4,Phoenix,Arizona,8,1,2000,19,29.666667,41,0,39,0.00975,0.02,10,17,8.2125,15.3,2,NA,2.7875,5.1,2,57
