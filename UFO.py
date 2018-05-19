@@ -141,7 +141,7 @@ root.configure(background='black')
 root.title('UFO')
     
 
-photo = PhotoImage(file="new.png")
+photo = PhotoImage(file="file/new.png")
 bg = Label(root,image=photo,width = 500,height = 600,borderwidth=0)
 bg.pack(side = TOP)
 
